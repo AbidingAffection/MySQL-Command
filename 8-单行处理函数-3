@@ -1,0 +1,100 @@
+格式函数
+1、format函数	
+	mysql> select empno,ename,format(sal,'$999,999') as sal from EMP;
+		查询员工薪水 并引入千分位。
+		+-------+--------+-------+
+		| empno | ename  | sal   |
+		+-------+--------+-------+
+		|  7369 | SMITH  | 800   |
+		|  7499 | ALLEN  | 1,600 |
+		|  7521 | WARD   | 1,250 |
+		|  7566 | JONES  | 2,975 |
+		|  7654 | MARTIN | 1,250 |
+		|  7698 | BLAKE  | 2,850 |
+		|  7782 | CLARK  | 2,450 |
+		|  7788 | SCOTT  | 3,000 |
+		|  7839 | KING   | 5,000 |
+		|  7844 | TURNER | 1,500 |
+		|  7876 | ADAMS  | 1,100 |
+		|  7900 | JAMES  | 950   |
+		|  7902 | FORD   | 3,000 |
+		|  7934 | MILLER | 1,300 |
+		+-------+--------+-------+
+		14 rows in set, 14 warnings (0.00 sec)
+
+
+引入:MySQL日期格式
+		%Y:代表 4 位的年份
+		%y:代表 2 位的年份
+		
+		%m:代表月, 格式为(01......12)
+		%c:代表月, 格式为(1......12)
+		
+		%H:代表小时,格式为(00......23)
+		%h:代表小时,格式为(01......12)
+		
+		%i:代表分钟, 格式为(00......59)
+		
+		%r:代表 时间,格式为 12 小时(hh:mm:ss [AP]M)
+		%T:代表 时间,格式为 24 小时(hh:mm:ss)
+		
+		%S:代表 秒,格式为(00......59)
+		%s:代表 秒,格式为(00......59)
+
+
+2、str_to_date
+	功能:将字符串varchar类型转换成date类型
+	mysql> create table t_user( id int, name varchar(10),brith date);
+		Query OK, 0 rows affected (0.04 sec)
+
+	mysql> desc t_user;
+		+-------+-------------+------+-----+---------+-------+
+		| Field | Type        | Null | Key | Default | Extra |
+		+-------+-------------+------+-----+---------+-------+
+		| id    | int         | YES  |     | NULL    |       |
+		| name  | varchar(10) | YES  |     | NULL    |       |
+		| brith | date        | YES  |     | NULL    |       |
+		+-------+-------------+------+-----+---------+-------+
+		3 rows in set (0.01 sec)
+
+	使用默认的日期格式:
+	mysql> insert into t_user values(1,'用户1','1990-10-01');
+		Query OK, 1 row affected (0.00 sec)
+	mysql> insert into t_user values(2,'用户2','1990-10-2');
+		Query OK, 1 row affected (0.00 sec)
+
+	使用自己的日期格式:
+	mysql> insert into t_user values(2,'用户2','01-10-1991');
+		ERROR 1292 (22007): Incorrect date value: '01-10-1991' for column 'brith' at row 1
+	mysql> insert into t_user values(2,'用户2',str_to_date('01-10-1991','%d-%m-%Y'));
+		Query OK, 1 row affected (0.01 sec)
+
+	mysql> select * from t_user;
+		+------+---------+------------+
+		| id   | name    | brith      |
+		+------+---------+------------+
+		|    1 | 用户1   | 1990-10-01 |
+		|    2 | 用户2   | 1990-10-02 |
+		|    2 | 用户2   | 1991-10-01 |
+		+------+---------+------------+
+		3 rows in set (0.00 sec)
+
+
+3、date_format
+	功能:将date类型转换成一定格式的varchar类型，主要用在将日期类型以特定格式显示。
+	mysql> select id,name,date_format(brith,'%m/%d') birth from t_user;
+		+------+---------+-------+
+		| id   | name    | birth |
+		+------+---------+-------+
+		|    1 | 用户1   | 10/01 |
+		|    2 | 用户2   | 10/02 |
+		|    2 | 用户2   | 10/01 |
+		+------+---------+-------+
+		3 rows in set (0.00 sec)
+
+
+
+
+
+
+

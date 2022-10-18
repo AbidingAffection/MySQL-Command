@@ -1,0 +1,99 @@
+
+引入:什么是子查询?
+		在select语句中嵌套select语句， 被嵌套的select语句称为子查询。
+	
+	 可以出现的位置?
+		select ...(select..)
+		from   ...(select..)
+		where  ...(select..)
+		
+1、where子句中的子查询
+	案例:找出比最低工资高的员工姓名和工资。
+		mysql> select ename,sal from EMP where sal>(select min(sal) from EMP);
+		+--------+---------+
+		| ename  | sal     |
+		+--------+---------+
+		| ALLEN  | 1600.00 |
+		| WARD   | 1250.00 |
+		| JONES  | 2975.00 |
+		| MARTIN | 1250.00 |
+		| BLAKE  | 2850.00 |
+		| CLARK  | 2450.00 |
+		| SCOTT  | 3000.00 |
+		| KING   | 5000.00 |
+		| TURNER | 1500.00 |
+		| ADAMS  | 1100.00 |
+		| JAMES  |  950.00 |
+		| FORD   | 3000.00 |
+		| MILLER | 1300.00 |
+		+--------+---------+
+		13 rows in set (0.00 sec)
+
+
+2、from子句中的子查询
+	技巧:from后面的子查询，可以将子查询的查询结果当作一张临时表。
+	案例:找出每个岗位的平均工资的薪资等级。
+	mysql> select job,avg(sal) from EMP group by job;
+		第一步:找出每个岗位的平均工资
+		+-----------+-------------+
+		| job       | avg(sal)    |
+		+-----------+-------------+
+		| CLERK     | 1037.500000 |
+		| SALESMAN  | 1400.000000 |
+		| MANAGER   | 2758.333333 |
+		| ANALYST   | 3000.000000 |
+		| PRESIDENT | 5000.000000 |
+		+-----------+-------------+
+		5 rows in set (0.00 sec)
+
+	mysql> select t.*,s.grade from (select job,avg(sal) avgsal from EMP group by job) t 
+	       join SALGRADE s on avgsal between s.losal and hisal;
+		第二步，把查询出的结果当作一张新表t，然后连接SALGRADE表s，进行内连接查询即可。
+		值得注意的是avg(sal)是需要去别名的，不然会把它当成分组函数又执行了一遍，而不是临时表的字段。
+		+-----------+-------------+-------+
+		| job       | avgsal      | grade |
+		+-----------+-------------+-------+
+		| CLERK     | 1037.500000 |     1 |
+		| SALESMAN  | 1400.000000 |     2 |
+		| MANAGER   | 2758.333333 |     4 |
+		| ANALYST   | 3000.000000 |     4 |
+		| PRESIDENT | 5000.000000 |     5 |
+		+-----------+-------------+-------+
+		5 rows in set (0.01 sec)
+
+
+3、select子句中的子查询
+	案例:找出每个员工的部门名称，要求显示员工名，部门名。
+	mysql> select e.ename,e.deptno,(select d.dname from DEPT d where e.deptno=d.deptno) dname 
+		   from EMP e;
+        值得注意的是，这个子查询并没有用上表连接。要求，select子查询的结果一次只能出来一行结果。
+		+--------+--------+------------+
+		| ename  | deptno | dname      |
+		+--------+--------+------------+
+		| SMITH  |     20 | RESEARCH   |
+		| ALLEN  |     30 | SALES      |
+		| WARD   |     30 | SALES      |
+		| JONES  |     20 | RESEARCH   |
+		| MARTIN |     30 | SALES      |
+		| BLAKE  |     30 | SALES      |
+		| CLARK  |     10 | ACCOUNTING |
+		| SCOTT  |     20 | RESEARCH   |
+		| KING   |     10 | ACCOUNTING |
+		| TURNER |     30 | SALES      |
+		| ADAMS  |     20 | RESEARCH   |
+		| JAMES  |     30 | SALES      |
+		| FORD   |     20 | RESEARCH   |
+		| MILLER |     10 | ACCOUNTING |
+		+--------+--------+------------+
+		14 rows in set (0.00 sec)
+
+	mysql> select e.ename,e.deptno,(select dname from DEPT) dname from EMP e;
+		ERROR 1242 (21000): Subquery returns more than 1 row
+
+
+
+
+
+
+
+

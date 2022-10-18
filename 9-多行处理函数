@@ -1,0 +1,117 @@
+
+分组函数:
+	分组函数也叫作多行处理函数，其特点是输入多行，最终输出一行。
+	
+使用注意:
+	1、分组函数在使用时，必须先进行分组，然后才能使用。如果没有对数据进行分组，整张表默认为一组。
+	2、分组函数在使用时自动忽略null。
+	   mysql> select sum(comm) from EMP;
+			+-----------+
+			| sum(comm) |
+			+-----------+
+			|   2200.00 |
+			+-----------+
+			1 row in set (0.00 sec)
+
+	3、分组函数中count(*)和count(具体字段)的区别。
+	   mysql> select count(*) from EMP;
+			统计数据库的总行数，因为不可能所有字段都为null。
+			+----------+
+			| count(*) |
+			+----------+
+			|       14 |
+			+----------+
+			1 row in set (0.00 sec)
+
+	   mysql> select count(comm) from EMP;
+			表示统计该字段下所有不为null的元素的总数。
+			+-------------+
+			| count(comm) |
+			+-------------+
+			|           4 |
+			+-------------+
+			1 row in set (0.00 sec)
+
+	4、分组函数不能直接使用在where子句中
+	   Q:找出比最低工资高的员工信息。
+	   	 mysql> select ename,sal from EMP where sal>min(sal);
+			ERROR 1111 (HY000): Invalid use of group function
+			上面这种写法就是错误的，因为SQL语句的执行顺序是
+			1、from 某张表
+			2、where 筛选条件
+			3、group by 分组条件
+			4、select 根据分组条件后执行筛选条件
+			5、order by 根据select结果排序显示
+			因为分组函数要先分组再使用，where执行的时候，还没分组。
+			而对于select sum(sal) from EMP语句，select在分组语句之后执行，此时默认整张表为一组。
+
+		 mysql> select ename,sal from EMP where sal > (select min(sal) from EMP);
+			这么写才行，
+			+--------+---------+
+			| ename  | sal     |
+			+--------+---------+
+			| ALLEN  | 1600.00 |
+			| WARD   | 1250.00 |
+			| JONES  | 2975.00 |
+			| MARTIN | 1250.00 |
+			| BLAKE  | 2850.00 |
+			| CLARK  | 2450.00 |
+			| SCOTT  | 3000.00 |
+			| KING   | 5000.00 |
+			| TURNER | 1500.00 |
+			| ADAMS  | 1100.00 |
+			| JAMES  |  950.00 |
+			| FORD   | 3000.00 |
+			| MILLER | 1300.00 |
+			+--------+---------+
+			13 rows in set (0.00 sec)
+				
+
+1、sum函数
+	mysql> select sum(sal) from EMP;
+		+----------+
+		| sum(sal) |
+		+----------+
+		| 29025.00 |
+		+----------+
+		1 row in set (0.00 sec)
+
+
+2、count函数
+	mysql> select count(ename) from EMP;
+		+--------------+
+		| count(ename) |
+		+--------------+
+		|           14 |
+		+--------------+
+		1 row in set (0.01 sec)
+
+
+3、avg函数
+	mysql> select avg(sal) from EMP;
+		+-------------+
+		| avg(sal)    |
+		+-------------+
+		| 2073.214286 |
+		+-------------+
+		1 row in set (0.00 sec)
+
+
+4、min/max函数
+	mysql> select max(sal) from EMP;
+		+----------+
+		| max(sal) |
+		+----------+
+		|  5000.00 |
+		+----------+
+		1 row in set (0.00 sec)
+
+
+
+
+
+
+
+
+
+

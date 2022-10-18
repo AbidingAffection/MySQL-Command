@@ -1,0 +1,53 @@
+
+1、update语法格式
+	update 表名 set 字段名1=值1, 字段名2=值2, 字段名3=值3 ...where 条件;
+	注意: 没有条件限制会导致所有数据全部更新。
+
+	mysql> update t_user set name='jack',birth='2000-10-11' where id=2;
+		Query OK, 1 row affected (0.00 sec)
+		Rows matched: 1  Changed: 1  Warnings: 0
+
+	mysql> select * from t_user;
+		+------+----------+------------+---------------------+
+		| id   | name     | birth      | create_time         |
+		+------+----------+------------+---------------------+
+		|    1 | zhangsan | 1990-10-01 | 2020-03-18 15:49:50 |
+		|    2 | jack     | 2000-10-11 | 2021-06-17 23:48:03 |
+		+------+----------+------------+---------------------+
+		2 rows in set (0.00 sec)
+
+	mysql> update t_user set name='abc';
+		Query OK, 2 rows affected (0.00 sec)
+		Rows matched: 2  Changed: 2  Warnings: 0
+
+	mysql> select * from t_user;
+		如果没有加条件会导致所有数据全部更新。
+		+------+------+------------+---------------------+
+		| id   | name | birth      | create_time         |
+		+------+------+------------+---------------------+
+		|    1 | abc  | 1990-10-01 | 2020-03-18 15:49:50 |
+		|    2 | abc  | 2000-10-11 | 2021-06-17 23:48:03 |
+		+------+------+------------+---------------------+
+		2 rows in set (0.00 sec)
+
+
+2、delete语法格式
+	delete from 表名 where 条件;
+	注意:没有条件，整张表的数据会全部删除。
+
+	mysql> delete from t_user where id=2;
+		Query OK, 1 row affected (0.00 sec)
+
+	mysql> select * from t_user;
+		+------+------+------------+---------------------+
+		| id   | name | birth      | create_time         |
+		+------+------+------------+---------------------+
+		|    1 | abc  | 1990-10-01 | 2020-03-18 15:49:50 |
+		+------+------+------------+---------------------+
+		1 row in set (0.00 sec)
+
+
+
+
+
+

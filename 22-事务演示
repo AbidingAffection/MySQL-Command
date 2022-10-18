@@ -1,0 +1,200 @@
+
+演示准备
+	1、查看当前事务隔离级别
+	mysql> SELECT @@transaction_isolation;
+		+-------------------------+
+		| @@transaction_isolation |
+		+-------------------------+
+		| REPEATABLE-READ         |
+		+-------------------------+
+		1 row in set (0.00 sec)
+		
+	2、建立表
+	drop table if exists t_user;
+	create table t_user(name varchar(32));
+	
+	3、开启两个窗口作为两个事务
+	mysql -uroot -p123456;
+	use bjpowernode;
+	
+
+验证read uncommitted
+	设置隔离级别
+	mysql> set global transaction isolation level read uncommitted;
+		Query OK, 0 rows affected (0.00 sec)
+		注意:设置完成隔离级别后，需要退出MySQL重新进入之后才能生效。
+	
+	mysql> SELECT @@transaction_isolation;
+		+-------------------------+
+		| @@transaction_isolation |
+		+-------------------------+
+		| READ-UNCOMMITTED        |
+		+-------------------------+
+		1 row in set (0.00 sec)
+	
+	创建两个窗口，然后都 use bjpowernode;
+		
+	事务A(左边窗口)                                         事务B(右边窗口)
+	-------------------------------------------------------------------------------------------------
+	mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)			      
+
+	mysql> select * from t_user;
+		Empty set (0.00 sec)
+														 mysql> start transaction;
+															Query OK, 0 rows affected (0.00 sec)
+
+
+														 mysql> insert into t_user values('zhangsan');
+															Query OK, 1 row affected (0.01 sec)
+
+	mysql> select * from t_user;
+		在事务B还未提交的情况下，A查到了数据。
+		+----------+
+		| name     |
+		+----------+
+		| zhangsan |
+		+----------+
+		1 row in set (0.00 sec)
+
+														 mysql> rollback;
+															Query OK, 0 rows affected (0.00 sec)
+	mysql> select * from t_user;
+		Empty set (0.00 sec)
+	-------------------------------------------------------------------------------------------------
+	
+	
+验证read commited
+	设置隔离级别
+	mysql> set global transaction isolation level read committed;
+		Query OK, 0 rows affected (0.00 sec)
+
+	退出，然后创建两个窗口，然后都 use bjpowernode;
+
+	事务A(左边窗口)                                         事务B(右边窗口)
+	-------------------------------------------------------------------------------------------------
+	mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)			      
+
+	mysql> select * from t_user;
+		Empty set (0.00 sec)
+														 mysql> start transaction;
+															Query OK, 0 rows affected (0.00 sec)
+
+
+														 mysql> insert into t_user values('zhangsan');
+															Query OK, 1 row affected (0.01 sec)
+
+	mysql> select * from t_user;
+		Empty set (0.00 sec)
+														 mysql> commit;
+															Query OK, 0 rows affected (0.01 sec)
+
+	mysql> select * from t_user;
+		+----------+
+		| name     |
+		+----------+
+		| zhangsan |
+		+----------+
+		1 row in set (0.00 sec)
+	-------------------------------------------------------------------------------------------------
+	
+	
+验证repeatable read
+	设置隔离级别
+	mysql> set global transaction isolation level repeatable read;
+		Query OK, 0 rows affected (0.00 sec)
+
+	退出，然后创建两个窗口，然后都 use bjpowernode;
+
+	事务A(左边窗口)                                         事务B(右边窗口)
+	-------------------------------------------------------------------------------------------------
+	mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)			      
+
+	mysql> select * from t_user;
+		+----------+
+		| name     |
+		+----------+
+		| zhangsan |
+		+----------+
+		1 row in set (0.00 sec)
+
+														 mysql> start transaction;
+															Query OK, 0 rows affected (0.00 sec)
+															
+														 mysql> insert into t_user values('lisi');
+															Query OK, 1 row affected (0.01 sec)
+
+														 mysql> insert into t_user values('wangwu');
+															Query OK, 1 row affected (0.00 sec)
+
+														 mysql> select * from t_user;
+															+----------+
+															| name     |
+															+----------+
+															| zhangsan |
+															| lisi     |
+															| wangwu   |
+															+----------+
+															3 rows in set (0.00 sec)
+	
+	mysql> select * from t_user;
+		+----------+
+		| name     |
+		+----------+
+		| zhangsan |
+		+----------+
+		1 row in set (0.00 sec)
+	-------------------------------------------------------------------------------------------------
+
+
+serializable
+	设置隔离级别
+	mysql> set global transaction isolation level serializable;
+		Query OK, 0 rows affected (0.00 sec)
+
+	退出，然后创建两个窗口，然后都 use bjpowernode;
+
+	事务A(左边窗口)                                         事务B(右边窗口)
+	-------------------------------------------------------------------------------------------------
+	mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)			      
+
+	mysql> select * from t_user;
+		+----------+
+		| name     |
+		+----------+
+		| zhangsan |
+		+----------+
+		1 row in set (0.00 sec)
+
+														 mysql> start transaction;
+															Query OK, 0 rows affected (0.00 sec)
+	
+	mysql> insert into t_user values('lisi');
+		Query OK, 1 row affected (0.00 sec)
+														 mysql> select * from t_user;
+															光标一直卡在这里
+	
+	mysql> commit;
+		Query OK, 0 rows affected (0.00 sec)
+
+														 mysql> select * from t_user;
+															左边提交之后，右边才显示查询结果。
+															因为一次对同一张表只能有一个事务在操作。
+															+----------+
+															| name     |
+															+----------+
+															| zhangsan |
+															| lisi     |
+															+----------+
+															2 rows in set (35.21 sec)
+	-------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+	

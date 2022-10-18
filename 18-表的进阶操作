@@ -1,0 +1,119 @@
+
+1、一次插入多条记录
+	mysql> insert into t_user values
+    -> (1,'zs','1980-10-11',now()),
+    -> (2,'lisi','1981-10-11',now()),
+    -> (3,'wangwu','1982-10-11',now());
+		Query OK, 3 rows affected (0.01 sec)
+		Records: 3  Duplicates: 0  Warnings: 0
+
+	mysql> select * from t_user;
+		+------+--------+------------+---------------------+
+		| id   | name   | birth      | create_time         |
+		+------+--------+------------+---------------------+
+		|    1 | zs     | 1980-10-11 | 2021-06-18 00:16:50 |
+		|    2 | lisi   | 1981-10-11 | 2021-06-18 00:16:50 |
+		|    3 | wangwu | 1982-10-11 | 2021-06-18 00:16:50 |
+		+------+--------+------------+---------------------+
+		3 rows in set (0.00 sec)
+
+
+2、快速创建表
+	原理:将一个查询结果当作一张表新建，可以完成表的快速复制。
+	
+	mysql> create table emp2 (as) select * from EMP where job='manager';
+		Query OK, 3 rows affected, 2 warnings (0.03 sec)
+		Records: 3  Duplicates: 0  Warnings: 2
+
+	mysql> select * from emp2;
+		+-------+-------+---------+------+------------+---------+------+--------+
+		| EMPNO | ENAME | JOB     | MGR  | HIREDATE   | SAL     | COMM | DEPTNO |
+		+-------+-------+---------+------+------------+---------+------+--------+
+		|  7566 | JONES | MANAGER | 7839 | 1981-04-02 | 2975.00 | NULL |     20 |
+		|  7698 | BLAKE | MANAGER | 7839 | 1981-05-01 | 2850.00 | NULL |     30 |
+		|  7782 | CLARK | MANAGER | 7839 | 1981-06-09 | 2450.00 | NULL |     10 |
+		+-------+-------+---------+------+------------+---------+------+--------+
+		3 rows in set (0.00 sec)
+
+		
+3、快速插入数据
+	原理:将一个查询结果作为数据插入到另一张表里面。
+	mysql> create table dept_bak as select * from DEPT;
+		Query OK, 4 rows affected (0.04 sec)
+		Records: 4  Duplicates: 0  Warnings: 0
+
+	mysql> insert into dept_bak select * from DEPT;
+		Query OK, 4 rows affected (0.00 sec)
+		Records: 4  Duplicates: 0  Warnings: 0
+
+	mysql> select * from dept_bak;
+		+--------+------------+----------+
+		| DEPTNO | DNAME      | LOC      |
+		+--------+------------+----------+
+		|     10 | ACCOUNTING | NEW YORK |
+		|     20 | RESEARCH   | DALLAS   |
+		|     30 | SALES      | CHICAGO  |
+		|     40 | OPERATIONS | BOSTON   |
+		|     10 | ACCOUNTING | NEW YORK |
+		|     20 | RESEARCH   | DALLAS   |
+		|     30 | SALES      | CHICAGO  |
+		|     40 | OPERATIONS | BOSTON   |
+		+--------+------------+----------+
+		8 rows in set (0.00 sec)
+
+
+4、快速删除数据
+	delete删除原理:
+		delete from dept_bak
+		逻辑删除，硬盘上的实际物理存储空间不会释放。缺点是比较慢，优点是数据还可以回滚恢复。
+	
+	回滚演示:
+	mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)
+
+	mysql> delete from dept_bak;
+		Query OK, 8 rows affected (0.00 sec)
+
+	mysql> select * from dept_bak;
+		Empty set (0.00 sec)
+
+	mysql> rollback;
+		Query OK, 0 rows affected (0.00 sec)
+
+	mysql> select * from dept_bak;
+		+--------+------------+----------+
+		| DEPTNO | DNAME      | LOC      |
+		+--------+------------+----------+
+		|     10 | ACCOUNTING | NEW YORK |
+		|     20 | RESEARCH   | DALLAS   |
+		|     30 | SALES      | CHICAGO  |
+		|     40 | OPERATIONS | BOSTON   |
+		|     10 | ACCOUNTING | NEW YORK |
+		|     20 | RESEARCH   | DALLAS   |
+		|     30 | SALES      | CHICAGO  |
+		|     40 | OPERATIONS | BOSTON   |
+		+--------+------------+----------+
+		8 rows in set (0.00 sec)
+
+	快速删除:
+		truncate table xxx; 这种删除效率比较高，表被一次截断，优点是效率高。缺点是物理删除，不支持回滚。
+		另外truncate只能用来删除表本身的全部内容，而不能删除某几条记录。
+	
+	mysql> truncate table dept_bak;
+		Query OK, 0 rows affected (0.04 sec)
+
+	mysql> select * from dept_bak;
+		Empty set (0.00 sec)
+
+	mysql> rollback;
+		Query OK, 0 rows affected (0.00 sec)
+
+	mysql> select * from dept_bak;
+		回滚之后，依然无法恢复数据。
+		Empty set (0.00 sec)
+	
+	
+ 
+
+
+

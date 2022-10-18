@@ -1,0 +1,152 @@
+
+引入：什么是连接查询？
+	 从一张表中单独查询，称为单独查询。
+	 将emp表和dept表联合起来查询数据，从emp表取员工名字，从dept表中取部门名字。
+	 这种跨表查询，多张表联合起来查询数据，被称为连接查询。
+	
+	 连接查询的分类？
+	 	按照语法年代分类:
+	 	SQL92: 1992年出现的语法
+	 	SQL99: 1999年出现的语法
+	    
+	    按照表连接方式分类
+	    内连接: 等值连接、非等值连接、自连接
+	    外连接: 左外连接(左连接)、右外连接(右连接)
+	    全连接(几乎不用所以不讲)
+	
+	    
+1、笛卡尔积现象
+	当两张表进行连接查询时，没有任何条件的限制会发生什么现象？
+	案例：查询每个员工所在部门名称
+	分析：mysql> select ename,deptno from EMP;
+			+--------+--------+
+			| ename  | deptno |
+			+--------+--------+
+			| SMITH  |     20 |
+			| ALLEN  |     30 |
+			| WARD   |     30 |
+			| JONES  |     20 |
+			| MARTIN |     30 |
+			| BLAKE  |     30 |
+			| CLARK  |     10 |
+			| SCOTT  |     20 |
+			| KING   |     10 |
+			| TURNER |     30 |
+			| ADAMS  |     20 |
+			| JAMES  |     30 |
+			| FORD   |     20 |
+			| MILLER |     10 |
+			+--------+--------+
+			14 rows in set (0.00 sec)
+
+		 mysql> select * from DEPT;
+			+--------+------------+----------+
+			| DEPTNO | DNAME      | LOC      |
+			+--------+------------+----------+
+			|     10 | ACCOUNTING | NEW YORK |
+			|     20 | RESEARCH   | DALLAS   |
+			|     30 | SALES      | CHICAGO  |
+			|     40 | OPERATIONS | BOSTON   |
+			+--------+------------+----------+
+			4 rows in set (0.00 sec)
+
+		 现在将两张表连接，没有任何限制的时候，最终查询结果条数是两张表条数的乘积。
+		 这种现象被称为笛卡尔积现象。
+			mysql> select ename,dname from EMP,DEPT;
+			+--------+------------+
+			| ename  | dname      |
+			+--------+------------+
+			| SMITH  | OPERATIONS |
+			| SMITH  | SALES      |
+			| SMITH  | RESEARCH   |
+			| SMITH  | ACCOUNTING |
+			| ALLEN  | OPERATIONS |
+			| ALLEN  | SALES      |
+			| ALLEN  | RESEARCH   |
+			| ALLEN  | ACCOUNTING |
+			...	...	...	...	...	...
+			| MILLER | OPERATIONS |
+			| MILLER | SALES      |
+			| MILLER | RESEARCH   |
+			| MILLER | ACCOUNTING |
+			+--------+------------+
+			56 rows in set (0.00 sec)
+
+		 如何避免笛卡尔积现象? 在连接查询的时候添加条件。
+
+
+2、内连接之等值连接
+		 mysql> select ename,dname from EMP,DEPT where EMP.deptno=DEPT.deptno;
+			最终查询的结果是14条，但是匹配的过程中，匹配的次数并没有减少。
+			+--------+------------+
+			| ename  | dname      |
+			+--------+------------+
+			| SMITH  | RESEARCH   |
+			| ALLEN  | SALES      |
+			| WARD   | SALES      |
+			| JONES  | RESEARCH   |
+			| MARTIN | SALES      |
+			| BLAKE  | SALES      |
+			| CLARK  | ACCOUNTING |
+			| SCOTT  | RESEARCH   |
+			| KING   | ACCOUNTING |
+			| TURNER | SALES      |
+			| ADAMS  | RESEARCH   |
+			| JAMES  | SALES      |
+			| FORD   | RESEARCH   |
+			| MILLER | ACCOUNTING |
+			+--------+------------+
+			14 rows in set (0.00 sec)
+
+		 mysql> select e.ename,d.dname from EMP e,DEPT d where e.deptno=d.deptno;
+			连接查询建议起别名提高效率，这里也能体现出from的执行靠前。
+			上面这种查询语句的语法是SQL 92的语法。
+			+--------+------------+
+			| ename  | dname      |
+			+--------+------------+
+			| SMITH  | RESEARCH   |
+			| ALLEN  | SALES      |
+			| WARD   | SALES      |
+			| JONES  | RESEARCH   |
+			| MARTIN | SALES      |
+			| BLAKE  | SALES      |
+			| CLARK  | ACCOUNTING |
+			| SCOTT  | RESEARCH   |
+			| KING   | ACCOUNTING |
+			| TURNER | SALES      |
+			| ADAMS  | RESEARCH   |
+			| JAMES  | SALES      |
+			| FORD   | RESEARCH   |
+			| MILLER | ACCOUNTING |
+			+--------+------------+
+			14 rows in set (0.00 sec)
+
+		 mysql> select e.ename,d.dname from EMP e join DEPT d on e.deptno=d.deptno;
+			上面这种查询语句的语法是SQL 99的语法,把逗号改成join，把where改成on。
+			+--------+------------+
+			| ename  | dname      |
+			+--------+------------+
+			| SMITH  | RESEARCH   |
+			| ALLEN  | SALES      |
+			| WARD   | SALES      |
+			| JONES  | RESEARCH   |
+			| MARTIN | SALES      |
+			| BLAKE  | SALES      |
+			| CLARK  | ACCOUNTING |
+			| SCOTT  | RESEARCH   |
+			| KING   | ACCOUNTING |
+			| TURNER | SALES      |
+			| ADAMS  | RESEARCH   |
+			| JAMES  | SALES      |
+			| FORD   | RESEARCH   |
+			| MILLER | ACCOUNTING |
+			+--------+------------+
+			14 rows in set (0.00 sec)
+
+
+
+
+
+
+
+

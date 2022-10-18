@@ -1,0 +1,76 @@
+
+1、概念引入
+	存储引擎是MySQL中特有的一个术语，oracle中也有类似的东西，但是不叫这个名字。
+	存储引擎实际上是一个表存储/组织数据的方式；不同的存储引擎，表存储数据的方式不同。
+	
+	
+2、如何指定存储引擎
+	已有表的完整建表语句:
+	mysql> show create table t_student;
+		| t_student | CREATE TABLE `t_student` (
+			`no` int NOT NULL AUTO_INCREMENT,
+			`name` varchar(255) DEFAULT NULL,
+			`cno` int DEFAULT NULL,
+			PRIMARY KEY (`no`),
+			KEY `cno` (`cno`),
+			CONSTRAINT `t_student_ibfk_1` FOREIGN KEY (`cno`) REFERENCES `t_class` (`classno`)
+		) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+		可以看到这里指定了存储引擎为 InnoDB，目前自增了6条记录，字符编码方式为 utf8mb4。
+	
+	所以可以在建表语句的最后，通过ENGINE关键字指定存储引擎。
+
+3、存储引擎的种类
+	mysql> show engines \g
+		可以通过上述指令查看MySQL支持的数据库引擎。
+		MySQL支持9大存储引擎，当前MySQL的版本支持8个；不同的版本，支持的情况不同。
+		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+		| Engine             | Support | Comment                                                        | Transactions | XA   | Savepoints |
+		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+		| ARCHIVE            | YES     | Archive storage engine                                         | NO           | NO   | NO         |
+		| BLACKHOLE          | YES     | /dev/null storage engine (anything you write to it disappears) | NO           | NO   | NO         |
+		| MRG_MYISAM         | YES     | Collection of identical MyISAM tables                          | NO           | NO   | NO         |
+		| FEDERATED          | NO      | Federated MySQL storage engine                                 | NULL         | NULL | NULL       |
+		| MyISAM             | YES     | MyISAM storage engine                                          | NO           | NO   | NO         |
+		| PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO         |
+		| InnoDB             | DEFAULT | Supports transactions, row-level locking, and foreign keys     | YES          | YES  | YES        |
+		| MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables      | NO           | NO   | NO         |
+		| CSV                | YES     | CSV storage engine                                             | NO           | NO   | NO         |
+		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+
+	常用存储引擎介绍:
+	MyISAM:
+	• MyISAM 存储引擎是 MySQL 最常用的引擎。
+	• 它管理的表具有以下特征:
+		– 使用三个文件表示每个表:
+		• 格式文件 — 存储表结构的定义(mytable.frm)
+		• 数据文件 — 存储表行的内容(mytable.MYD)
+		• 索引文件 — 存储表上索引(mytable.MYI)
+		– 灵活的 AUTO_INCREMENT 字段处理
+		– 可被转换为压缩、只读表来节省空间，不支持事务。
+		
+	InnoDB:
+	• InnoDB 存储引擎是 MySQL 的缺省引擎，也是一个重量级存储引擎。
+	• 它管理的表具有下列主要特征:
+		– 每个 InnoDB 表在数据库目录中以.frm 格式文件表示
+		– InnoDB 表空间 tablespace 被用于存储表的内容
+		– 提供一组用来记录事务性活动的日志文件
+		– 用 COMMIT(提交)、SAVEPOINT 及 ROLLBACK(回滚)支持事务处理
+		– 提供全 ACID 兼容
+		– 在 MySQL 服务器崩溃后提供自动恢复
+		– 多版本(MVCC)和行级锁定
+		– 支持外键及引用的完整性,包括级联删除和更新
+		
+	MEMORY:
+	• 使用 MEMORY 存储引擎的表,其数据存储在内存中,且行的长度固定,这两个特点使得 MEMORY 存储引擎非常快。
+	•MEMORY 存储引擎管理的表具有下列特征:
+		– 在数据库目录内,每个表均以.frm 格式的文件表示。
+		– 表数据及索引被存储在内存中，关机后数据消失。
+		– 表级锁机制。
+		– 不能包含 TEXT 或 BLOB 字段。
+		MEMORY 存储引擎以前被称为 HEAP 引擎。
+
+
+
+
+
+

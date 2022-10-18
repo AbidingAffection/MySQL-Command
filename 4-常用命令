@@ -1,0 +1,84 @@
+
+1、查看mysql版本
+	mysql程序选项支持以下两种通用形式:
+		长选项，由单词之前加两个减号组成 --version
+		短选项，由单词字母之间加一个减号组成 -V
+	
+	mysql --version
+	mysql  Ver 8.0.25-0ubuntu0.20.04.1 for Linux on x86_64 ((Ubuntu))
+		
+	mysql -V
+	mysql  Ver 8.0.25-0ubuntu0.20.04.1 for Linux on x86_64 ((Ubuntu))
+
+
+2、创建与使用数据库
+	create database 数据库名称;
+	create database bjpowernode;
+	
+	use 数据库名称;
+	use bjpowernode;
+	
+	因为在数据库中建立表之前，必须要先通过use选择数据库。
+	
+	
+3、查询当前使用的数据库
+	mysql> select database();
+		+-------------+
+		| database()  |
+		+-------------+
+		| bjpowernode |
+		+-------------+
+		1 row in set (0.00 sec)
+
+	查询数据库的版本也可以使用这个语句
+	mysql> select version();
+		+-------------------------+
+		| version()               |
+		+-------------------------+
+		| 8.0.25-0ubuntu0.20.04.1 |
+		+-------------------------+
+		1 row in set (0.00 sec)
+		
+		
+4、终止一条语句
+	如果想要终止一条正在编写的语句，可以键入\c。
+	mysql> select * from \c
+	mysql>
+	
+	
+5、退出mysql
+    支持以下三种退出方式:
+	mysql> \q
+	mysql> quit
+	mysql> exit
+	
+
+6、查看其他表中的库
+	mysql> show tables from sys;
+		+-----------------------------------------------+
+		| Tables_in_sys                                 |
+		+-----------------------------------------------+
+		| host_summary                                  |
+		| host_summary_by_file_io                       |
+		| host_summary_by_file_io_type                  |
+		| host_summary_by_stages                        |
+		| host_summary_by_statement_latency             |
+		| host_summary_by_statement_type                |
+		| innodb_buffer_stats_by_schema   
+
+
+7、查看表的创建语句
+	mysql> show create table EMP;
+		| EMP   | CREATE TABLE `EMP` (
+		  `EMPNO` int NOT NULL,
+		  `ENAME` varchar(10) DEFAULT NULL,
+		  `JOB` varchar(9) DEFAULT NULL,
+		  `MGR` int DEFAULT NULL,
+		  `HIREDATE` date DEFAULT NULL,
+		  `SAL` double(7,2) DEFAULT NULL,
+		  `COMM` double(7,2) DEFAULT NULL,
+		  `DEPTNO` int DEFAULT NULL,
+		  PRIMARY KEY (`EMPNO`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+

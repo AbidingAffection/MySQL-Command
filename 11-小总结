@@ -1,0 +1,39 @@
+
+1、SQL概述
+	SQL 的全称 Structured Query Language),SQL 用来和数据库打交道,完成和数据库的通信,
+	SQL是一套标准。但是每一个数据库都有自己的特性别的数据库没有,当使用这个数据库特性相关的功能,
+	这时 SQL 语句可能就不是标准了.(90%以上的 SQL 都是通用的)
+	
+	
+2、什么是数据库
+	数据库,通常是一个或一组文件,保存了一些符合特定规格的数据,数据库对应的英语单词是 DataBase,简称:DB,
+	数据库软件称为数据库管理系统(DBMS),全称为 DataBase Management System,如:Oracle、SQL Server、MySql。
+	
+	
+3、MySQL概述
+	MySQL 最初是由“MySQL AB”公司开发的一套关系型数据库管理系统(RDBMS-Relational Database Mangerment System)。
+	MySQL 不仅是最流行的开源数据库,而且是业界成长最快的数据库,每天有超过 7 万次的下载量,其应用范围非常广泛。
+	MySQL AB 是由两个瑞典人和一个芬兰人:David Axmark、Allan Larsson 和 Michael “Monty” Widenius 在瑞典创办的。
+	在 2008 年初,Sun Microsystems 收购了 MySQL AB 公司。在 2009 年,Oracle 收购了 Sun 公司,使 MySQL 并入 Oracle。
+	
+
+4、SQL分类
+	数据查询语言(DQL-Data Query Language)
+	代表关键字:select
+	
+	数据操纵语言(DML-Data Manipulation Language)
+	代表关键字:insert,delete,update
+	
+	数据定义语言(DDL-Data Definition Language)
+	代表关键字:create ,drop,alter,
+	
+	事务控制语言(TCL-Transactional Control Language)
+	代表关键字:commit ,rollback;
+	
+	数据控制语言(DCL-Data Control Language)
+	代表关键字:grant,revoke.
+	
+	
+	
+	
+	

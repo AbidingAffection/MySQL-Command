@@ -1,0 +1,43 @@
+
+查看表结构desc:
+	mysql> desc EMP;
+		+----------+-------------+------+-----+---------+-------+
+		| Field    | Type        | Null | Key | Default | Extra |
+		+----------+-------------+------+-----+---------+-------+
+		| EMPNO    | int         | NO   | PRI | NULL    |       |
+		| ENAME    | varchar(10) | YES  |     | NULL    |       |
+		| JOB      | varchar(9)  | YES  |     | NULL    |       |
+		| MGR      | int         | YES  |     | NULL    |       |
+		| HIREDATE | date        | YES  |     | NULL    |       |
+		| SAL      | double(7,2) | YES  |     | NULL    |       |
+		| COMM     | double(7,2) | YES  |     | NULL    |       |
+		| DEPTNO   | int         | YES  |     | NULL    |       |
+		+----------+-------------+------+-----+---------+-------+
+		8 rows in set (0.01 sec)
+
+
+	mysql> desc DEPT;
+		+--------+-------------+------+-----+---------+-------+
+		| Field  | Type        | Null | Key | Default | Extra |
+		+--------+-------------+------+-----+---------+-------+
+		| DEPTNO | int         | NO   | PRI | NULL    |       |
+		| DNAME  | varchar(14) | YES  |     | NULL    |       |
+		| LOC    | varchar(13) | YES  |     | NULL    |       |
+		+--------+-------------+------+-----+---------+-------+
+		3 rows in set (0.00 sec)
+
+	
+	mysql> desc SALGRADE;
+		+-------+------+------+-----+---------+-------+
+		| Field | Type | Null | Key | Default | Extra |
+		+-------+------+------+-----+---------+-------+
+		| GRADE | int  | YES  |     | NULL    |       |
+		| LOSAL | int  | YES  |     | NULL    |       |
+		| HISAL | int  | YES  |     | NULL    |       |
+		+-------+------+------+-----+---------+-------+
+		3 rows in set (0.00 sec)
+
+
+
+
+

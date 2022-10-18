@@ -1,0 +1,171 @@
+
+1、索引的创建和删除
+	创建索引:
+	mysql> create index emp2_ename_index on emp2(ename);
+		Query OK, 0 rows affected (0.04 sec)
+		Records: 0  Duplicates: 0  Warnings: 0
+	
+	删除索引:
+	mysql> drop index emp2_ename_index on emp2;
+		Query OK, 0 rows affected (0.02 sec)
+		Records: 0  Duplicates: 0  Warnings: 0
+
+	查看一个表的索引:
+	mysql> show index from EMP;
+		+-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+		| Table | Non_unique | Key_name        | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
+		+-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+		| EMP   |          0 | PRIMARY         |            1 | EMPNO       | A         |          14 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+		| EMP   |          1 | emp_ename_index |            1 | ENAME       | A         |          14 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+		| EMP   |          1 | emp_sal_index   |            1 | SAL         | A         |          12 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+		+-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+		3 rows in set (0.02 sec)
+
+
+2、查看一个SQL语句是否使用了索引
+	mysql> explain select * from EMP where ename='smith';
+		explain 语句的作用是解释执行。可以看到rows这里扫描了14条记录，type=ALL，说明没有使用索引。
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		|  1 | SIMPLE      | EMP   | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   14 |    10.00 | Using where |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		1 row in set, 1 warning (0.00 sec)
+
+	mysql> create index emp_ename_index on EMP(ename);
+		Query OK, 0 rows affected (0.04 sec)
+		Records: 0  Duplicates: 0  Warnings: 0
+
+	mysql> explain select * from EMP where ename='smith';
+		一旦创建了索引，Type类型就变成了ref，扫描的记录rows=1，说明使用了索引。
+		还可以看到 key=emp_ename_index，所以底层实际还用了hash算法，不仅仅是一棵树，而是数组+数，所以只需要扫描一条记录。
+		+----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-------+
+		| id | select_type | table | partitions | type | possible_keys   | key             | key_len | ref   | rows | filtered | Extra |
+		+----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-------+
+		|  1 | SIMPLE      | EMP   | NULL       | ref  | emp_ename_index | emp_ename_index | 43      | const |    1 |   100.00 | NULL  |
+		+----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-------+
+		1 row in set, 1 warning (0.00 sec)
+		
+	补充:explain指令的type等级划分
+		ALL        
+		INDEX       
+		RANGE       
+		REF       
+		EQ_REF        
+		CONST,SYSTEM        
+		NULL
+		自上而下，性能从最差到最好
+
+
+3、索引的失效
+	失效情况1:
+	select * from emp where ename like '%T';
+	因为模糊匹配中，以%作为开头，所以没有办法排序，也就没有办法使用索引。
+	因此，在模糊匹配中应该尽量避免使用%作为开头。
+	
+	mysql> explain select * from EMP where ename like '%T';
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		|  1 | SIMPLE      | EMP   | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   14 |    11.11 | Using where |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		1 row in set, 1 warning (0.00 sec)
+
+	mysql> explain select * from EMP where ename like 'T%';
+		如果第一位不是%，此时的type=range,表示索引范围扫描。
+		+----+-------------+-------+------------+-------+-----------------+-----------------+---------+------+------+----------+-----------------------+
+		| id | select_type | table | partitions | type  | possible_keys   | key             | key_len | ref  | rows | filtered | Extra                 |
+		+----+-------------+-------+------------+-------+-----------------+-----------------+---------+------+------+----------+-----------------------+
+		|  1 | SIMPLE      | EMP   | NULL       | range | emp_ename_index | emp_ename_index | 43      | NULL |    1 |   100.00 | Using index condition |
+		+----+-------------+-------+------------+-------+-----------------+-----------------+---------+------+------+----------+-----------------------+
+		1 row in set, 1 warning (0.00 sec)
+
+	失效情况2:
+	使用or的时候，只有左右两边的条件字段都有索引的时候，才会使用索引。
+	如果一边有索引而另一边没有索引，那么有索引的字段也会失效。
+	所以这也是为什么不建议使用or的原因，而使用union不会让索引失效。
+			
+	mysql> explain select * from EMP where ename='smith' or job='manager';
+		+----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+		| id | select_type | table | partitions | type | possible_keys   | key  | key_len | ref  | rows | filtered | Extra       |
+		+----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+		|  1 | SIMPLE      | EMP   | NULL       | ALL  | emp_ename_index | NULL | NULL    | NULL |   14 |    16.43 | Using where |
+		+----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+		1 row in set, 1 warning (0.00 sec)
+
+	mysql> explain select * from EMP where ename='smith' union  select * from EMP where job='manager';
+		+----+--------------+------------+------------+------+-----------------+-----------------+---------+-------+------+----------+-----------------+
+		| id | select_type  | table      | partitions | type | possible_keys   | key             | key_len | ref   | rows | filtered | Extra           |
+		+----+--------------+------------+------------+------+-----------------+-----------------+---------+-------+------+----------+-----------------+
+		|  1 | PRIMARY      | EMP        | NULL       | ref  | emp_ename_index | emp_ename_index | 43      | const |    1 |   100.00 | NULL            |
+		|  2 | UNION        | EMP        | NULL       | ALL  | NULL            | NULL            | NULL    | NULL  |   14 |    10.00 | Using where     |
+		| NULL | UNION RESULT | <union1,2> | NULL       | ALL  | NULL            | NULL            | NULL    | NULL  | NULL |     NULL | Using temporary |
+		+----+--------------+------------+------------+------+-----------------+-----------------+---------+-------+------+----------+-----------------+
+		3 rows in set, 1 warning (0.00 sec)
+	
+	失效情况3:
+	使用复合索引的时候，没有使用左侧的列查找，索引失效。
+	mysql> create index emp_job_sal_index on EMP(job,sal);
+		Query OK, 0 rows affected (0.04 sec)
+		Records: 0  Duplicates: 0  Warnings: 0
+
+	mysql> explain select * from EMP where job='manager';
+		+----+-------------+-------+------------+------+-------------------+-------------------+---------+-------+------+----------+-------+
+		| id | select_type | table | partitions | type | possible_keys     | key               | key_len | ref   | rows | filtered | Extra |
+		+----+-------------+-------+------------+------+-------------------+-------------------+---------+-------+------+----------+-------+
+		|  1 | SIMPLE      | EMP   | NULL       | ref  | emp_job_sal_index | emp_job_sal_index | 39      | const |    3 |   100.00 | NULL  |
+		+----+-------------+-------+------------+------+-------------------+-------------------+---------+-------+------+----------+-------+
+		1 row in set, 1 warning (0.00 sec)
+
+	mysql> explain select * from EMP where sal=800;
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		|  1 | SIMPLE      | EMP   | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   14 |    10.00 | Using where |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		1 row in set, 1 warning (0.00 sec)
+	
+	失效情况4:
+	在where子句中，索引列参加了数学运算。
+	mysql> create index emp_sal_index on EMP(sal);
+		Query OK, 0 rows affected (0.03 sec)
+		Records: 0  Duplicates: 0  Warnings: 0
+
+	mysql> explain select * from EMP where sal=800+1;
+		+----+-------------+-------+------------+------+---------------+---------------+---------+-------+------+----------+-------+
+		| id | select_type | table | partitions | type | possible_keys | key           | key_len | ref   | rows | filtered | Extra |
+		+----+-------------+-------+------------+------+---------------+---------------+---------+-------+------+----------+-------+
+		|  1 | SIMPLE      | EMP   | NULL       | ref  | emp_sal_index | emp_sal_index | 9       | const |    1 |   100.00 | NULL  |
+		+----+-------------+-------+------------+------+---------------+---------------+---------+-------+------+----------+-------+
+		1 row in set, 1 warning (0.00 sec)
+
+	mysql> explain select * from EMP where sal+1=800;
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		|  1 | SIMPLE      | EMP   | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   14 |   100.00 | Using where |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		1 row in set, 1 warning (0.00 sec)
+
+	失效情况5:
+	在where子句中，索引列使用了函数。
+	mysql> explain select * from EMP where ename='smith';
+		+----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-------+
+		| id | select_type | table | partitions | type | possible_keys   | key             | key_len | ref   | rows | filtered | Extra |
+		+----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-------+
+		|  1 | SIMPLE      | EMP   | NULL       | ref  | emp_ename_index | emp_ename_index | 43      | const |    1 |   100.00 | NULL  |
+		+----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-------+
+		1 row in set, 1 warning (0.00 sec)
+
+	mysql> explain select * from EMP where lower(ename)='smith';
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		|  1 | SIMPLE      | EMP   | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   14 |   100.00 | Using where |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+		1 row in set, 1 warning (0.00 sec)
+
+
+
+
+

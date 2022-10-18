@@ -1,0 +1,175 @@
+
+分组查询:
+	在实际的应用中，可能有这样的需求，徐亚先进行分组，然后对每一组的数据进行操作。
+		select ...
+		from ...
+		group by...
+	
+	比如
+		计算每个部门的工资和
+		计算每个工作岗位的平均薪资
+		找出每个岗位的最高薪资
+		
+	Q:在此处，单表执行查询结束。现将之前的关键字全部组合在一起，它们的执行顺序如何?
+	  ！写一个sql的顺序
+		select ...
+		from ...
+		where ...
+		group by ...
+		having ...
+		order by ...
+		
+	  !实际执行一个sql的顺序
+		1、from 某张表
+		2、where 筛选条件
+		
+		3、group by 分组条件 
+		4、having 对分组条件进行进一步筛选      [分组函数]
+		//这两个关键之后面 只能跟着select中字段
+		
+		5、select 根据筛选条件后执行分组条件    [分组函数]
+		6、order by 根据select结果排序显示
+	  
+	  这其实非常有规律，where作用于from结果上，所以where执行顺序在from之后
+	  然后having是作用在group by的结果上，所以having执行顺序是在group之后
+	  最后order by是作用于select结果的，所以order by执行顺序在select之后
+	  按照执行顺序，一个sql应该写成from where group by having select order by，只不过我们把select提前了
+		
+	A:对于select sum(sal) from EMP，虽然没有显示的写group by语句，但是它也是有的
+	  只不过此时是把整张表默认分为了一组; order by语句也有，只不过默认采用asc。
+	  select ename,sal from EMP where sal>min(sal),在where子句执行时还没有分组
+	  所以分组函数min()不能使用，报错内容为无效的分组函数。
+	  
+	  
+1、group by语句
+	Q:找出不同工作岗位的最高工资。
+	  mysql> select job,max(sal) from EMP group by job;
+		以上语句的执行顺序是?
+		1、from EMP表中查出数据
+		2、order by job进行分组
+		3、select avg(job) 对分完组后的每一组数据求平均值
+		+-----------+----------+
+		| job       | max(sal) |
+		+-----------+----------+
+		| CLERK     |  1300.00 |
+		| SALESMAN  |  1600.00 |
+		| MANAGER   |  2975.00 |
+		| ANALYST   |  3000.00 |
+		| PRESIDENT |  5000.00 |
+		+-----------+----------+
+		5 rows in set (0.00 sec)
+
+	  mysql> select ename,job,max(sal) from EMP group by job;
+		上述语句会报错，因为如果SQL语句中有group by job子句，那么select中只能有
+		参加 [分组的字段，比如job，以及分组函数，比如avg(sal)]，其他的一律不能跟。
+		因为分组函数必须先分组再执行，所以你也不可能写 group by max(sal)。
+		ERROR 1055 (42000): Expression #1 of SELECT list is not in GROUP BY clause and 
+		contains nonaggregated column 'bjpowernode.EMP.ENAME' which is not functionally 
+		dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+	 
+	Q:找出每个部门，不同工作岗位的最高薪资。
+		select deptno,max(sal) from EMP group by deptno,job 
+		+--------+-----------+---------+--------+
+		| ename  | job       | sal     | deptno |
+		+--------+-----------+---------+--------+
+		| CLARK  | MANAGER   | 2450.00 |     10 |
+		| KING   | PRESIDENT | 5000.00 |     10 |
+		| MILLER | CLERK     | 1300.00 |     10 |
+		
+		| SMITH  | CLERK     |  800.00 |     20 |
+		| JONES  | MANAGER   | 2975.00 |     20 |
+		| SCOTT  | ANALYST   | 3000.00 |     20 |
+		| ADAMS  | CLERK     | 1100.00 |     20 |
+		| FORD   | ANALYST   | 3000.00 |     20 |
+		
+		| ALLEN  | SALESMAN  | 1600.00 |     30 |
+		| WARD   | SALESMAN  | 1250.00 |     30 |
+		| MARTIN | SALESMAN  | 1250.00 |     30 |
+		| BLAKE  | MANAGER   | 2850.00 |     30 |
+		| TURNER | SALESMAN  | 1500.00 |     30 |
+		| JAMES  | CLERK     |  950.00 |     30 |
+		+--------+-----------+---------+--------+
+		14 rows in set (0.00 sec)
+
+	  技巧:两个字段联合起来看作为分组，比如MANAGER20和MANAGER30,作为一个分组。
+	  mysql> select job,deptno,max(sal) from EMP group by job,deptno;
+		+-----------+--------+----------+
+		| job       | deptno | max(sal) |
+		+-----------+--------+----------+
+		| CLERK     |     20 |  1100.00 |
+		| SALESMAN  |     30 |  1600.00 |
+		| MANAGER   |     20 |  2975.00 |
+		| MANAGER   |     30 |  2850.00 |
+		| MANAGER   |     10 |  2450.00 |
+		| ANALYST   |     20 |  3000.00 |
+		| PRESIDENT |     10 |  5000.00 |
+		| CLERK     |     30 |   950.00 |
+		| CLERK     |     10 |  1300.00 |
+		+-----------+--------+----------+
+		9 rows in set (0.01 sec)
+
+	 
+2、having子句
+	 使用having子句，可对分完组的数据进行下一步过滤。
+	 having不能代替where单独使用，它必须和group by语句配套使用。
+	
+	Q:找出每个部门的最高薪资，要求显示最高薪资大于3000。
+	A:第一步找出每个部门的最高薪资
+	  mysql> select deptno,max(sal) from EMP group by deptno;
+		+--------+----------+
+		| deptno | max(sal) |
+		+--------+----------+
+		|     20 |  3000.00 |
+		|     30 |  2850.00 |
+		|     10 |  5000.00 |
+		+--------+----------+
+		3 rows in set (0.00 sec)
+
+	  第二步在查询结果里筛选出大于3000的
+	  mysql> select deptno,max(sal) from EMP group by deptno having max(sal)>3000;
+		还可以注意到having子句中的条件，也必须是 deptno,max(sal)中的任意一个。
+		如果你直接写了sal>3000则会报错，但是写deptno>10则可以执行。
+		+--------+----------+
+		| deptno | max(sal) |
+		+--------+----------+
+		|     10 |  5000.00 |
+		+--------+----------+
+		1 row in set (0.00 sec)
+
+	A:上面这种写法的效率比较低，可以考虑先用where语句进行过滤，让3000以下都不参与分组。
+	  mysql> select deptno,max(sal) from EMP where sal>3000 group by deptno;
+		优化策略:where和having，优先使用wehre，where做不了的再考虑having。
+		+--------+----------+
+		| deptno | max(sal) |
+		+--------+----------+
+		|     10 |  5000.00 |
+		+--------+----------+
+		1 row in set (0.01 sec)
+
+	Q:找出每个部门的平均薪资，要求显示平均薪资大于2000。
+	  mysql> select deptno,avg(sal) from EMP group by deptno having avg(sal)>2000;
+		这种情况就是where单独做不了的，因为要先平均工资avg(sal),要分组后才能做。
+		+--------+-------------+
+		| deptno | avg(sal)    |
+		+--------+-------------+
+		|     20 | 2175.000000 |
+		|     10 | 2916.666667 |
+		+--------+-------------+
+		2 rows in set (0.00 sec)
+
+	Q:找出每个岗位的平均薪资，要求显示平均薪资大于1500的，除了MANAGER岗位之外，要求降序。
+	  mysql> select job,avg(sal) as avgsal from EMP where job<>'manager' group by job having avgsal>1500 order by avgsal desc;
+		因为先执行select再执行order by和having，所以在这里可以用它们的别名。
+		+-----------+-------------+
+		| job       | avgsal      |
+		+-----------+-------------+
+		| PRESIDENT | 5000.000000 |
+		| ANALYST   | 3000.000000 |
+		+-----------+-------------+
+		2 rows in set (0.00 sec)
+
+
+	
+	 
+	 
+	 

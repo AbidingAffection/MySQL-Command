@@ -1,0 +1,183 @@
+
+1、外连接
+	内连接的特点:完全能够匹配上这个条件的数据拿出来。(两张表没有主次关系)
+	mysql> select e.ename,d.dname from EMP e join DEPT d on e.deptno=d.deptno;
+		完全满足这个条件的 e.deptno=d.deptno 数据被拿出来。
+		+--------+------------+
+		| ename  | dname      |
+		+--------+------------+
+		| SMITH  | RESEARCH   |
+		| ALLEN  | SALES      |
+		| WARD   | SALES      |
+		| JONES  | RESEARCH   |
+		| MARTIN | SALES      |
+		| BLAKE  | SALES      |
+		| CLARK  | ACCOUNTING |
+		| SCOTT  | RESEARCH   |
+		| KING   | ACCOUNTING |
+		| TURNER | SALES      |
+		| ADAMS  | RESEARCH   |
+		| JAMES  | SALES      |
+		| FORD   | RESEARCH   |
+		| MILLER | ACCOUNTING |
+		+--------+------------+
+		14 rows in set (0.00 sec)
+
+	外连接的特点:将左边或者右边的表作为基准(有主次关系)，它的数据全部显示出来的基础上，再匹配。
+	mysql> select e.ename,d.dname from EMP e right join DEPT d on e.deptno=d.deptno;
+		比如 部门OPERATIONS，它并没有所属员工，但是我们依然要显示它。它在右边，所以用right join。
+		+--------+------------+
+		| ename  | dname      |
+		+--------+------------+
+		| MILLER | ACCOUNTING |
+		| KING   | ACCOUNTING |
+		| CLARK  | ACCOUNTING |
+		| FORD   | RESEARCH   |
+		| ADAMS  | RESEARCH   |
+		| SCOTT  | RESEARCH   |
+		| JONES  | RESEARCH   |
+		| SMITH  | RESEARCH   |
+		| JAMES  | SALES      |
+		| TURNER | SALES      |
+		| BLAKE  | SALES      |
+		| MARTIN | SALES      |
+		| WARD   | SALES      |
+		| ALLEN  | SALES      |
+		| NULL   | OPERATIONS |
+		+--------+------------+
+		15 rows in set (0.00 sec)
+		
+	mysql> select e.ename,d.dname from DEPT d left join EMP e on e.deptno=d.deptno;
+		左外连接和右外连接可以等价转换，并且left join其实省略了outer，完整写法是left outer join。
+		+--------+------------+
+		| ename  | dname      |
+		+--------+------------+
+		| MILLER | ACCOUNTING |
+		| KING   | ACCOUNTING |
+		| CLARK  | ACCOUNTING |
+		| FORD   | RESEARCH   |
+		| ADAMS  | RESEARCH   |
+		| SCOTT  | RESEARCH   |
+		| JONES  | RESEARCH   |
+		| SMITH  | RESEARCH   |
+		| JAMES  | SALES      |
+		| TURNER | SALES      |
+		| BLAKE  | SALES      |
+		| MARTIN | SALES      |
+		| WARD   | SALES      |
+		| ALLEN  | SALES      |
+		| NULL   | OPERATIONS |
+		+--------+------------+
+		15 rows in set (0.00 sec)
+
+	案例:查询每个员工的上级领导，要求显示所有员工的名字和领导名字。
+	mysql> select a.ename,b.ename from EMP a left join EMP b on a.mgr=b.empno;
+		+--------+-------+
+		| ename  | ename |
+		+--------+-------+
+		| SMITH  | FORD  |
+		| ALLEN  | BLAKE |
+		| WARD   | BLAKE |
+		| JONES  | KING  |
+		| MARTIN | BLAKE |
+		| BLAKE  | KING  |
+		| CLARK  | KING  |
+		| SCOTT  | JONES |
+		| KING   | NULL  |
+		| TURNER | BLAKE |
+		| ADAMS  | SCOTT |
+		| JAMES  | BLAKE |
+		| FORD   | JONES |
+		| MILLER | CLARK |
+		+--------+-------+
+		14 rows in set (0.00 sec)
+
+
+3、三张及以上表连接
+	语法: 
+		select ... from a 
+		join b on a和b的连接条件，相当于a+=b
+		join c on a和c的连接条件，相当于a+=c
+		join d on a和d的连接条件，相当于a+=d
+		where 筛选条件
+		
+	案例:找出每个员工的部门名称，同时找出每个员工的工资等级。要求显示员工名，部门名，薪资，薪资等级。
+	mysql> select e.ename,e.sal,d.dname,s.grade from EMP e 
+	       join DEPT d on e.deptno=d.deptno 
+	       join SALGRADE s on e.sal between s.losal and s.hisal;
+			+--------+---------+------------+-------+
+			| ename  | sal     | dname      | grade |
+			+--------+---------+------------+-------+
+			| SMITH  |  800.00 | RESEARCH   |     1 |
+			| ALLEN  | 1600.00 | SALES      |     3 |
+			| WARD   | 1250.00 | SALES      |     2 |
+			| JONES  | 2975.00 | RESEARCH   |     4 |
+			| MARTIN | 1250.00 | SALES      |     2 |
+			| BLAKE  | 2850.00 | SALES      |     4 |
+			| CLARK  | 2450.00 | ACCOUNTING |     4 |
+			| SCOTT  | 3000.00 | RESEARCH   |     4 |
+			| KING   | 5000.00 | ACCOUNTING |     5 |
+			| TURNER | 1500.00 | SALES      |     3 |
+			| ADAMS  | 1100.00 | RESEARCH   |     1 |
+			| JAMES  |  950.00 | SALES      |     1 |
+			| FORD   | 3000.00 | RESEARCH   |     4 |
+			| MILLER | 1300.00 | ACCOUNTING |     2 |
+			+--------+---------+------------+-------+
+			14 rows in set (0.00 sec)
+
+	案例：找出每个员工的部门名称，同时找出每个员工的工资等级，还有上级领导。
+	mysql> select e.ename,e.sal,d.dname,s.grade from EMP e
+		   join DEPT d on e.deptno=d.deptno
+		   join SALGRADE s on e.sal between s.losal and s.hisal 
+		   join EMP l on e.mgr=l.empno;
+			这个时候，我们发现king没了，因为king的mgr为null，也就是它没有上级领导。
+			+--------+---------+------------+-------+
+			| ename  | sal     | dname      | grade |
+			+--------+---------+------------+-------+
+			| SMITH  |  800.00 | RESEARCH   |     1 |
+			| ALLEN  | 1600.00 | SALES      |     3 |
+			| WARD   | 1250.00 | SALES      |     2 |
+			| JONES  | 2975.00 | RESEARCH   |     4 |
+			| MARTIN | 1250.00 | SALES      |     2 |
+			| BLAKE  | 2850.00 | SALES      |     4 |
+			| CLARK  | 2450.00 | ACCOUNTING |     4 |
+			| SCOTT  | 3000.00 | RESEARCH   |     4 |
+			| TURNER | 1500.00 | SALES      |     3 |
+			| ADAMS  | 1100.00 | RESEARCH   |     1 |
+			| JAMES  |  950.00 | SALES      |     1 |
+			| FORD   | 3000.00 | RESEARCH   |     4 |
+			| MILLER | 1300.00 | ACCOUNTING |     2 |
+			+--------+---------+------------+-------+
+			13 rows in set (0.00 sec)
+
+	mysql> select e.ename,e.sal,d.dname,s.grade,l.ename from EMP e 
+		   join DEPT d on e.deptno=d.deptno
+		   join SALGRADE s on e.sal between s.losal and s.hisal 
+		   left join EMP l on e.mgr=l.empno;
+			使用left join保证左边的内容完全显示。
+			+--------+---------+------------+-------+-------+
+			| ename  | sal     | dname      | grade | ename |
+			+--------+---------+------------+-------+-------+
+			| SMITH  |  800.00 | RESEARCH   |     1 | FORD  |
+			| ALLEN  | 1600.00 | SALES      |     3 | BLAKE |
+			| WARD   | 1250.00 | SALES      |     2 | BLAKE |
+			| JONES  | 2975.00 | RESEARCH   |     4 | KING  |
+			| MARTIN | 1250.00 | SALES      |     2 | BLAKE |
+			| BLAKE  | 2850.00 | SALES      |     4 | KING  |
+			| CLARK  | 2450.00 | ACCOUNTING |     4 | KING  |
+			| SCOTT  | 3000.00 | RESEARCH   |     4 | JONES |
+			| KING   | 5000.00 | ACCOUNTING |     5 | NULL  |
+			| TURNER | 1500.00 | SALES      |     3 | BLAKE |
+			| ADAMS  | 1100.00 | RESEARCH   |     1 | SCOTT |
+			| JAMES  |  950.00 | SALES      |     1 | BLAKE |
+			| FORD   | 3000.00 | RESEARCH   |     4 | JONES |
+			| MILLER | 1300.00 | ACCOUNTING |     2 | CLARK |
+			+--------+---------+------------+-------+-------+
+			14 rows in set (0.00 sec)
+
+
+		
+
+	
+	
+	

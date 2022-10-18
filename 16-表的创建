@@ -1,0 +1,123 @@
+
+1、建表语法格式
+	create table 表名(
+		字段名  数据类型,
+		字段名  数据类型,
+		字段名  数据类型
+	);
+
+
+2、MySQL中的数据类型
+	字符类型:
+		varchar	: 会根据实际的数据长度(加上一个记录长度的)，动态分配空间，比较智能，但是效率比char低。
+		char	: 分配的长度固定(加上一个记录长度的)，比varchar效率高，但是浪费空间
+		不管是char(4)还是varchar(4)，你插入的时候都不能输入超过5个字符，这里的n都是上限
+	
+	数值类型:
+		int		: 相当于java中的int	(默认最长11)
+		bigint	: 相当于java中的long	
+		float	: 相当于java中的float
+		double	: 相当于java中的double
+		但是对于int(5)来说，这个5其实是显示宽度的意思，要搭配一个fillzero的属性才能看得出来的效果
+		比如插入123，显示为00123，而其底层存储的时候，int就是4个字节，范围就是-2^32~2^32-1.
+		
+	日期类型:
+		date	: 短日期类型
+		datetime: 长日期类型
+		
+	其他类型:
+		clob	: 字符大对象，character large object ，可以存储最多4G的字符串，比如一篇文章。
+		blob	: 二进制大对象，binary large object，专门用来存储图片，声音，视频等 数据。
+		
+		因为varchar和char最长是11位。最长是255，超过这个长度就要用clob了。
+		向blob中插入数据需要使用IO流。
+
+
+3、实例
+	假设要建立一个电影表存储。
+	编号			名字   			故事情节			上映时间			时长			  海报 			类型
+	no(bigint)	name(varchar)	history(clob)	playtime(date)	time(double)  image(blob)	type(char)
+	10000		哪吒				...				2019-10-11		2.5			  ...			'1'
+	10001		巴啦啦小魔仙		...				2020-12-11		1.5			  ...			'2'
+
+
+4、建表与删表
+	mysql> create table t_student(
+    -> no int,
+    -> name varchar(10),
+    -> sex char(1),
+    -> age int(3),
+    -> email varchar(255)
+    -> );
+		数据库中有一条命名规范，所有的标识符都是小写，如果有多个单词则用下划线隔开。
+		Query OK, 0 rows affected, 1 warning (0.04 sec)
+
+	drop table t_student;				//当表不存在的时候会报错
+	drop table if exists t_student;		//这样就不会报错
+	
+	
+5、插入
+	mysql> insert into t_student (no,name,sex,age,email) values(1,'zhangsan','男',20,'zhangsan@163.com');
+		Query OK, 1 row affected (0.00 sec)
+
+	mysql> insert into t_studentvalues(2,'lis','男',19,'lisi@163.com');
+		Query OK, 1 row affected (0.00 sec)
+
+	mysql> insert into t_student(no,name,sex) values(3,'xiaohong','女');
+		Query OK, 1 row affected (0.00 sec)
+
+	mysql> select * from t_student;
+		+------+----------+------+------+------------------+
+		| no   | name     | sex  | age  | email            |
+		+------+----------+------+------+------------------+
+		|    1 | zhangsan | 男   |   20 | zhangsan@163.com |
+		|    2 | lis      | 男   |   19 | lisi@163.com     |
+		|    3 | xiaohong | 女   | NULL | NULL             |
+		+------+----------+------+------+------------------+
+		3 rows in set (0.00 sec)
+
+	
+	mysql> insert into t_student values(2,'lisi');
+		上面这三种都是正确的写法，其中最标准的写法是 insert into t_student (x1,x2) values(v1,v2);
+		如果你插入的是全部字段的数据，那么可以只写表名，而不用指定插入的字段
+		ERROR 1136 (21S01): Column count doesn't match value count at row 1
+
+
+6、date和datetime的区别
+	date是短日期: 只包括年月日信息，默认格式为 %Y-%m-%d
+	datetime是长日期: 包括年月日时分秒信息，默认格式为 %Y-%m-%d %h:%i:%s
+	
+	drop table if exists t_user;
+	create table t_user(
+		id int,
+		name varchar(10),
+		birth date,
+		create_time datetime
+	);
+	insert into t_user values(1,'zhangsan','1990-10-01','2020-03-18 15:49:50');
+	
+	mysql> select * from t_user;
+		mysql> select * from t_user;
+		+------+----------+------------+---------------------+
+		| id   | name     | birth      | create_time         |
+		+------+----------+------------+---------------------+
+		|    1 | zhangsan | 1990-10-01 | 2020-03-18 15:49:50 |
+		+------+----------+------------+---------------------+
+		1 row in set (0.00 sec)
+
+	使用now()获取系统当前时间，返回值为datetime类型。
+	mysql> select * from t_user;
+		+------+----------+------------+---------------------+
+		| id   | name     | birth      | create_time         |
+		+------+----------+------------+---------------------+
+		|    1 | zhangsan | 1990-10-01 | 2020-03-18 15:49:50 |
+		|    2 | lisi     | 1990-10-01 | 2021-06-17 23:48:03 |
+		+------+----------+------------+---------------------+
+		2 rows in set (0.00 sec)
+
+
+
+
+
+
+

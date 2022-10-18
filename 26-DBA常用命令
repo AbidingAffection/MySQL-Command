@@ -1,0 +1,22 @@
+
+1、数据的备份
+	DBA常用命令主要了解以下 数据的导入和导出。其他的命令看文档即可。
+	
+	导出:
+	abidingai@abidingai-W65KJ1-KK1:~$ mysqldump bjpowernode > Desktop/txt/MySQL/dump_test/bjbackup.sql -uroot -p123456;
+		导出数据库
+		mysqldump: [Warning] Using a password on the command line interface can be insecure.
+		
+	abidingai@abidingai-W65KJ1-KK1:~$ mysqldump bjpowernode emp2> Desktop/txt/MySQL/dump_test/bjbackup.sql -uroot -p123456;
+		导出数据库中指定表
+		mysqldump: [Warning] Using a password on the command line interface can be insecure.
+
+	导入:
+	1、登入mysql数据库 mysql -uroot -p123456;
+	2、创建数据库 create database bjpowernode;
+	3、使用数据库 use bjpowernode;
+	3、导入数据库 source Desktop/txt/MySQL/dump_test/bjbackup.sql 
+	
+	
+	
+	

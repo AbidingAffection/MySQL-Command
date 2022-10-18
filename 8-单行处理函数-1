@@ -1,0 +1,138 @@
+
+数据处理函数:
+	单行处理函数又叫作数据处理函数，因为它是一个输入对应一个输出。
+	多行处理函数又叫作分组处理函数，因为它是多个输入对应一个输出。
+
+字符串处理函数
+1、lower/upper函数
+	mysql> select lower(ename) from EMP;
+		14个输入最后还是14个输出
+		+--------------+
+		| lower(ename) |
+		+--------------+
+		| smith        |
+		| allen        |
+		| ward         |
+		| jones        |
+		| martin       |
+		| blake        |
+		| clark        |
+		| scott        |
+		| king         |
+		| turner       |
+		| adams        |
+		| james        |
+		| ford         |
+		| miller       |
+		+--------------+
+		14 rows in set (0.00 sec)
+
+
+2、substr函数
+	mysql> select substr(ename,1,2) from EMP;
+		值得注意的是，mysql的substr函数的下标，默认是从1开始的
+		+-------------------+
+		| substr(ename,1,2) |
+		+-------------------+
+		| SM                |
+		| AL                |
+		| WA                |
+		| JO                |
+		| MA                |
+		| BL                |
+		| CL                |
+		| SC                |
+		| KI                |
+		| TU                |
+		| AD                |
+		| JA                |
+		| FO                |
+		| MI                |
+		+-------------------+
+		14 rows in set (0.00 sec)
+	
+	mysql> select ename from EMP where substr(ename,1,1)='A';
+		查询以A开头的员工名字的信息，也可以使用substr()的方式
+		+-------+
+		| ename |
+		+-------+
+		| ALLEN |
+		| ADAMS |
+		+-------+
+		2 rows in set (0.00 sec)
+
+
+3、concat函数
+	mysql> select concat(empno,ename) from EMP;
+		+---------------------+
+		| concat(empno,ename) |
+		+---------------------+
+		| 7369SMITH           |
+		| 7499ALLEN           |
+		| 7521WARD            |
+		| 7566JONES           |
+		| 7654MARTIN          |
+		| 7698BLAKE           |
+		| 7782CLARK           |
+		| 7788SCOTT           |
+		| 7839KING            |
+		| 7844TURNER          |
+		| 7876ADAMS           |
+		| 7900JAMES           |
+		| 7902FORD            |
+		| 7934MILLER          |
+		+---------------------+
+		14 rows in set (0.00 sec)
+
+	mysql> select concat(upper(substr(sname,1,1)),substr(sname,2,length(sname))) from STU;
+		完成首字母大写的任务
+		+----------------------------------------------------------------+
+		| concat(upper(substr(sname,1,1)),substr(sname,2,length(sname))) |
+		+----------------------------------------------------------------+
+		| Zhangsan                                                       |
+		| Lisi                                                           |
+		| Wangwu                                                         |
+		| Jack_son                                                       |
+		+----------------------------------------------------------------+
+		4 rows in set (0.00 sec)
+
+
+4、length函数
+	mysql> select length(ename) from EMP;
+		+---------------+
+		| length(ename) |
+		+---------------+
+		|             5 |
+		|             5 |
+		|             4 |
+		|             5 |
+		|             6 |
+		|             5 |
+		|             5 |
+		|             5 |
+		|             4 |
+		|             6 |
+		|             5 |
+		|             5 |
+		|             4 |
+		|             6 |
+		+---------------+
+		14 rows in set (0.00 sec)
+
+
+5、trim函数
+	mysql> select * from EMP where ename=' KING';
+		Empty set (0.00 sec)
+
+	mysql> select * from EMP where ename=trim(' KING ');
+		+-------+-------+-----------+------+------------+---------+------+--------+
+		| EMPNO | ENAME | JOB       | MGR  | HIREDATE   | SAL     | COMM | DEPTNO |
+		+-------+-------+-----------+------+------------+---------+------+--------+
+		|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
+		+-------+-------+-----------+------+------------+---------+------+--------+
+		1 row in set (0.00 sec)
+
+
+
+
+

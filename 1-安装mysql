@@ -1,0 +1,88 @@
+
+在Ubuntu 20.04上安装MySQL
+	
+	安装命令: sudo apt install mysql-server
+	
+	服务启动:
+		 1、使用 service 启动：service mysql start
+		 2、使用 mysqld 脚本启动：/etc/init.d/mysql start 
+	
+	服务关闭:
+	     1、使用 service 启动：service mysql stop 
+		 2、使用 mysqld 脚本启动：/etc/init.d/mysql stop
+	
+	验证运行: sudo systemctl status mysql
+		服务启动时:
+	  		 mysql.service - MySQL Community Server
+			 Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+			 Active: active (running) since Mon 2021-06-14 18:05:47 CST; 2min 26s ago
+		  	 Main PID: 60169 (mysqld)
+			 Status: "Server is operational"
+			 Tasks: 37 (limit: 9346)
+			 Memory: 333.4M
+			 CGroup: /system.slice/mysql.service
+				 	└─60169 /usr/sbin/mysqld
+		服务关闭时:
+			 mysql.service - MySQL Community Server
+		     Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+		     Active: inactive (dead) since Mon 2021-06-14 19:15:47 CST; 23s ago
+		     Process: 60169 ExecStart=/usr/sbin/mysqld (code=exited, status=0/SUCCESS)
+		   	 Main PID: 60169 (code=exited, status=0/SUCCESS)
+		     Status: "Server shutdown complete"
+
+
+	关于登录:
+		 刚刚安装完成的时候，用户和登录类型如下图所示，所以可以使用 sudo mysql 然后输入系统的root的密码登录
+			+------------------+-----------------------+
+			| user             | plugin                |
+			+------------------+-----------------------+
+			| debian-sys-maint | caching_sha2_password |
+			| mysql.infoschema | caching_sha2_password |
+			| mysql.session    | caching_sha2_password |
+			| mysql.sys        | caching_sha2_password |
+			| root             | auth_socket           |
+			+------------------+-----------------------+
+
+		 如果想要修改这种登录方式，使用 mysql -uroot -p 的方式登录，我们可以修改如下内容:
+		 因为用户的信息保存在mysql这个数据库里，所以要先use mysql，然后再做查询，或者修改。
+		 mysql> use mysql; 
+		 mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '123456';
+		 此时再查看root用户的登录类型 mysql> select user, plugin from user; 发现登录方式发生了修改，说明密码修改成功。
+			+------------------+-----------------------+
+			| user             | plugin                |
+			+------------------+-----------------------+
+			| debian-sys-maint | caching_sha2_password |
+			| mysql.infoschema | caching_sha2_password |
+			| mysql.session    | caching_sha2_password |
+			| mysql.sys        | caching_sha2_password |
+			| root             | mysql_native_password |
+			+------------------+-----------------------+
+		
+		 因为上面我们修改了登录方式为mysql -u root -p，并设置了密码123456，所以现在登录的过程为
+		 输入mysql -u root -p，然后输入密码123456
+
+		 除了这两种登录方式以外，在sudo gedit /etc/mysql/debian.cnf文件里还给出了另一种登录方式:
+			# Automatically generated for Debian scripts. DO NOT TOUCH!
+			[client]
+			host     = localhost
+			user     = debian-sys-maint
+			password = HlW1Mex797LWsutF
+			socket   = /var/run/mysqld/mysqld.sock
+			[mysql_upgrade]
+			host     = localhost
+			user     = debian-sys-maint
+			password = HlW1Mex797LWsutF
+			socket   = /var/run/mysqld/mysqld.sock
+
+	关于区分大小写:
+		 MySQL 在 Linux 下数据库名、表名、列名、别名大小写规则是这样的:(只有列名是忽略大小写的)
+			1、数据库名与表名是严格区分大小写的;
+			2、表的别名是严格区分大小写的;
+			3、变量名也是严格区分大小写的;
+			4、列名与列的别名在所有的情况下均是忽略大小写的;
+		 MySQL 在 Windows 下都不区分大小写
+	
+	
+	
+	
+	

@@ -1,0 +1,198 @@
+
+1、什么是约束
+	约束对应的英语单词:constraint
+	在创建表的时候，我们可以给表的字段加上一些约束，来保证这个表中数据的完整性，有效性。
+	
+
+2、约束包括哪些
+	非空约束:not null
+	唯一约束:unique
+	主键约束:primary key
+	外键约束:foreign key
+	检查约束:check	(mysql不支持，oracle支持)
+
+
+3、非空约束
+	非空约束 not null 要求该字段不能为空。
+	drop table if exists t_vip;
+	create table t_vip(
+		id int,
+		name varchar(255) not null
+	);
+	insert into t_vip(id,name) values(1,'zhangsan'); 执行正确
+	insert into t_vip(id) values(2); 执行错误
+	
+	
+4、唯一约束
+	唯一约束unique 约束的字段不能重复，但是可以为null。
+	drop table if exists t_vip;
+	create table t_vip(
+		id int,
+		name varchar(255) unique,
+		email varchar(255),
+	);
+	insert into t_vip(id,name) values(1,'zhangsan','zhangsan@123.com'); 执行正确
+	insert into t_vip(id,name) values(1,'lisi','lisi@123.com'); 执行正确
+	insert into t_vip(id) values(2); 执行正确
+	insert into t_vip(id) values(3); 执行正确
+	insert into t_vip(id,name) values(1,'lisi','lisi@123.com'); 执行报错
+
+	unique支持多个字段联合具有唯一性。
+	drop table if exists t_vip;
+		create table t_vip(
+		id int,
+		name varchar(255),
+		email varchar(255),
+		unique(name,email)
+	);
+	 
+	补充1:约束直接写在列后面的，叫作列级约束。约束直接写在表后面的，叫作表级约束。
+	     not null只允许列级约束，不允许表级约束。
+	
+	补充2:当not null和unique联合使用的时候，在MySQL中自动变成主键，在oracle中不是这样。
+	drop table if exists t_vip;
+	create table t_vip(
+		id int,
+		name varchar(255) not null unique
+	);
+	desc t_vip;
+		+-------+--------------+------+-----+---------+-------+
+		| Field | Type         | Null | Key | Default | Extra |
+		+-------+--------------+------+-----+---------+-------+
+		| id    | int          | YES  |     | NULL    |       |
+		| name  | varchar(255) | NO   | PRI | NULL    |       |
+		+-------+--------------+------+-----+---------+-------+
+		2 rows in set (0.00 sec)
+
+
+5、主键约束
+	特征: not null + unique
+	列级约束:
+		drop table if exists t_vip; 
+		create table t_vip(
+			id int primary key,
+			name varchar(255) 
+		);
+	表级约束:
+		drop table if exists t_vip;
+		create table t_vip(
+			id int,
+			name varchar(255),
+			primary key(id,name)
+		);
+	auto_increment：自动维护主键值，采用自增的方式。
+		drop table if exists t_vip;
+		create table t_vip(
+			id int primary key auto_increment,
+			name varchar(255)
+		);
+	
+
+6、外键约束
+	业务背景:设计数据库表，来描述"班级和学生"的信息。
+	  方案1:班级和学生存储在一张表中。
+			no(pk)		name		classno		classname
+			---------------------------------------------------------------
+			1			jack		100			北京市大兴去亦庄镇第一中学高三1班
+			2			lucy		100			北京市大兴去亦庄镇第一中学高三1班
+			3			Tom 		101			北京市大兴去亦庄镇第一中学高三2班
+			4			Jerry		101			北京市大兴去亦庄镇第一中学高三2班
+			5			zhangsan	103			北京市大兴去亦庄镇第一中学高三3班
+	   缺点:数据冗余，空间浪费，设计比较失败。
+			
+	  方案2:班级一张表，学生一张表。
+	  	   t_student
+			no(pk)		name		cno(FK)
+			-------------------------------
+			1			jack		100
+			2			lucy		100
+			3			Tom			101
+			4			Jerry		101
+			5			zhangsan	102
+	  	   
+	  	   t_class
+			classno(pk)		name
+			-------------------------------------------
+			100				北京市大兴去亦庄镇第一中学高三1班
+			101				北京市大兴去亦庄镇第一中学高三2班
+			102				北京市大兴去亦庄镇第一中学高三3班
+	  
+	   问题1:如果不使用外键约束PK，那么可能会导致你插入一个本不存在的班级，那么这一行数据就无效了。
+	   	    使用了外键约束之后，cno的值一定是和t_calss中的classno唯一对应的。
+	   问题2:使用了外键约束之后，相当于引入了父子关系，t_class为父表，t_student为子表。
+	        创建表的顺序: 父-->子   t_class-->t_student 
+	        插入数据顺序: 父-->子   t_class-->t_student 
+	        删除数据顺序: 子-->父	 t_student-->t_class
+	        删除表的顺序: 子-->父   t_student-->t_class
+	   问题3:外键可为空吗? 子表中的外键引用父表中的某个字段，被引用的这个字段必须是主键吗?
+	        被引用字段不一定是主键，只要是unique即可，所以外键值可以为null，
+		
+	   drop table if exists t_student;
+	   drop table if exists t_class;
+	   create table t_class(
+			classno int primary key,
+			classname varchar(255)
+	   );
+	   create table t_student(
+			no int primary key auto_increment,
+			name varchar(255),
+			cno int,
+			foreign key(cno) references t_class(classno)
+	   );
+	   
+	   insert into t_class values(100,'北京市大兴去亦庄镇第一中学高三1班');
+	   insert into t_class values(101,'北京市大兴去亦庄镇第一中学高三2班');
+	   insert into t_class values(102,'北京市大兴去亦庄镇第一中学高三3班');
+	   
+	   insert into t_student(name,cno) values('jack',100);
+	   insert into t_student(name,cno) values('lucy',100);
+	   insert into t_student(name,cno) values('Tom',101);
+	   insert into t_student(name,cno) values('Jerry',101);
+	   insert into t_student(name,cno) values('zhangsan',102);
+	   
+	   mysql> desc t_class;
+			+-----------+--------------+------+-----+---------+-------+
+			| Field     | Type         | Null | Key | Default | Extra |
+			+-----------+--------------+------+-----+---------+-------+
+			| classno   | int          | NO   | PRI | NULL    |       |
+			| classname | varchar(255) | YES  |     | NULL    |       |
+			+-----------+--------------+------+-----+---------+-------+
+			2 rows in set (0.00 sec)
+
+       mysql> select * from t_class;
+			+---------+------------------------------+
+			| classno | classname                    |
+			+---------+------------------------------+
+			|     100 | 北京市大兴去亦庄镇第一中学高三1班  |
+			|     101 | 北京市大兴去亦庄镇第一中学高三2班  |
+			|     102 | 北京市大兴去亦庄镇第一中学高三3班  |
+			+---------+------------------------------+
+			3 rows in set (0.00 sec)
+	   
+	   mysql> desc t_student;
+			+-------+--------------+------+-----+---------+----------------+
+			| Field | Type         | Null | Key | Default | Extra          |
+			+-------+--------------+------+-----+---------+----------------+
+			| no    | int          | NO   | PRI | NULL    | auto_increment |
+			| name  | varchar(255) | YES  |     | NULL    |                |
+			| cno   | int          | YES  | MUL | NULL    |                |
+			+-------+--------------+------+-----+---------+----------------+
+			3 rows in set (0.00 sec)
+	   
+	   mysql> select * from t_student;
+			+----+----------+------+
+			| no | name     | cno  |
+			+----+----------+------+
+			|  1 | jack     |  100 |
+			|  2 | lucy     |  100 |
+			|  3 | Tom      |  101 |
+			|  4 | Jerry    |  101 |
+			|  5 | zhangsan |  102 |
+			+----+----------+------+
+			5 rows in set (0.00 sec)
+
+
+
+
+
+
